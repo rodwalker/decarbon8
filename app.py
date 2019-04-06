@@ -1,16 +1,14 @@
 from flask import Flask, request, jsonify
 from redis import Redis
 
-from google.appengine.ext import ndb
-
 app = Flask(__name__)
 redis = Redis(host="redis", db=0, socket_timeout=5, charset="utf-8", decode_responses=True)
 
-class Appliance(ndb.Model):
-  """ Household appliance with power profile  """
-  apptype = ndb.String.Property()
-  model = ndb.String.Property()
-  program = ndb.String.Property()
+#class Appliance(ndb.Model):
+#  """ Household appliance with power profile  """
+#  apptype = ndb.String.Property()
+#  model = ndb.String.Property()
+#  program = ndb.String.Property()
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
