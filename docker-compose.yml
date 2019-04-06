@@ -1,4 +1,4 @@
-version: '3'
+version: '3.1'
 
 services:
   app:
@@ -8,6 +8,8 @@ services:
       - FLASK_ENV=development
     ports:
       - 5000:5000
+    env_file: .secrets
 
   redis:
     image: redis:4.0.11-alpine
+

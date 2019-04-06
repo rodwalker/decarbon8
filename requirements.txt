@@ -1,6 +1,9 @@
 flask
 redis<3.0.0
 google-cloud-storage
-xmltodict
+numpy
+arrow
+bs4
+pandas
 
 
