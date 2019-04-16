@@ -27,25 +27,62 @@ class Intensity:
         return self.intensity[country]
     print('Getting new')
     windsolar = ENTSOE.fetch_wind_solar_forecasts(country)
-    print(windsolar[-1],len(windsolar))
-# seems to only get 1 day
-#    allgen = ENTSOE.fetch_generation_forecast(country)
     allgen = ENTSOE.fetch_consumption_forecast(country)
-    print(allgen[-1],len(allgen))
+    print(windsolar[0],windsolar[-1],len(windsolar))
+#    for i in range(len(windsolar)):
+#      print(windsolar[i]['datetime'] , allgen[i]['datetime'])
+    
+
+    print(allgen[0],allgen[-1],len(allgen))
+# shuould have 2 list of same length with same dates
+# Loop over the longer one.
+# TODO: Handle different granularity.Fill in missing values with previous
+    combi=[]
+    ag=0
     ws=0
+    while ag<len(allgen) and ws<len(windsolar):
+      agd = allgen[ag]['datetime']
+      wsd = windsolar[ws]['datetime']
+      if agd == wsd:
+        print('Timestamps match')
+        date=agd
+        gen=allgen[ag]['value']
+        wind=windsolar[ws]['production']['wind']
+        solar=windsolar[ws]['production']['solar']
+        ag+=1
+        ws+=1
+      elif agd < wsd:
+        print(agd,' before ', wsd)
+        ag=ag+1
+      elif agd > wsd:
+        print(agd,' after ', wsd)
+       # remember last ws values for 1hr
+        date=agd
+        gen=allgen[ag]['value']
+        if arrow.get(agd) > arrow.get(wsd).shift(hours=1):
+          wind=0
+          solar=0
+        ws+=1
+        ag+=1
+      else:
+        print ('Should not happen')
+
+      combi.append({'datetime':date,'allgen':gen,
+                     'wind':wind,
+                    'solar':solar})
+
+        # Now loop over combined dict list
     data=[]
-    for ag in allgen:
-      allkwh = ag['value']
-      alltime = ag['datetime']
-      for q in range(1):
-        windkwh=windsolar[ws]['production']['wind']
-        solarkwh=windsolar[ws]['production']['solar']
-        if solarkwh is None: solarkwh=0
-        #print(alltime, allkwh, windkwh,solarkwh)
-        co2intensity=(allkwh-windkwh-solarkwh)*400/allkwh
-        print(alltime, allkwh, windkwh,solarkwh,co2intensity)
-        data.append({'datetime':windsolar[ws]['datetime'],'gco2':co2intensity})
-        ws=ws+1
+    for c in combi:
+      allkwh=c['allgen']
+      windkwh=c['wind']
+      solarkwh=c['solar']
+      if solarkwh is None: solarkwh=0
+      #print(alltime, allkwh, windkwh,solarkwh)
+      co2intensity=(allkwh-windkwh-solarkwh)*400/allkwh
+      print(c['datetime'],allkwh, windkwh,solarkwh,co2intensity)
+      data.append({'datetime':c['datetime'],'gco2':co2intensity})
+
       
     self.intensity[country] = { 'created': arrow.utcnow(), 'data': data }
     return self.intensity[country]
