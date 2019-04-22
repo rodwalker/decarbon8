@@ -28,12 +28,12 @@ class Intensity:
     print('Getting new')
     windsolar = ENTSOE.fetch_wind_solar_forecasts(country)
     allgen = ENTSOE.fetch_consumption_forecast(country)
-    print(windsolar[0],windsolar[-1],len(windsolar))
+    print(windsolar[0]['datetime'],windsolar[-1]['datetime'],len(windsolar))
 #    for i in range(len(windsolar)):
 #      print(windsolar[i]['datetime'] , allgen[i]['datetime'])
     
 
-    print(allgen[0],allgen[-1],len(allgen))
+    print(allgen[0]['datetime'],allgen[-1]['datetime'],len(allgen))
 # shuould have 2 list of same length with same dates
 # Loop over the longer one.
 # TODO: Handle different granularity.Fill in missing values with previous
@@ -44,7 +44,7 @@ class Intensity:
       agd = allgen[ag]['datetime']
       wsd = windsolar[ws]['datetime']
       if agd == wsd:
-        print('Timestamps match')
+     #   print('Timestamps match')
         date=agd
         gen=allgen[ag]['value']
         wind=windsolar[ws]['production']['wind']
@@ -79,7 +79,8 @@ class Intensity:
       solarkwh=c['solar']
       if solarkwh is None: solarkwh=0
       #print(alltime, allkwh, windkwh,solarkwh)
-      co2intensity=(allkwh-windkwh-solarkwh)*400/allkwh
+     # min 0 since can be more wind/solar than demand 
+      co2intensity=max(0,allkwh-windkwh-solarkwh)*400/allkwh
       print(c['datetime'],allkwh, windkwh,solarkwh,co2intensity)
       data.append({'datetime':c['datetime'],'gco2':co2intensity})
 
@@ -121,11 +122,12 @@ class Intensity:
         #print (when,ilist[i]['datetime'],ilist[i]['gco2'])
         return ilist[i]['gco2']
     print('Not in range: ',when,ilist[-1]['datetime'])
+    return 999.
     
 if __name__ == '__main__':
   i = Intensity()
   
-  i.getDelay('DE',24)
+  i.getDelay('GB',12)
 #  print(i.getProfile('DE')['data'][-1])
 #  time.sleep(11)
 #  print (i.getProfile('DE')['data'][3])
